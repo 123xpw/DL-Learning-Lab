@@ -81,10 +81,10 @@ flowchart LR
 
 ## 与 SegFormer exp1 横向对比
 
-| | SRCNN | SegFormer-B0 |
-|--|--|--|
-| 参数量 | 20K | 3.7M |
-| 训练设备 | 本地 MPS ✅ | Colab T4（MPS 有 bug）|
-| 训练时间 | 几分钟 | ~30 分钟 |
-| 最终指标 | PSNR 26.32 dB | mIoU 0.6658 |
-| Loss 类型 | MSE（回归）| CrossEntropy（分类）|
+|         | SRCNN         | SegFormer-B0        |
+| ------- | ------------- | ------------------- |
+| 参数量     | 20K           | 3.7M                |
+| 训练设备    | 本地 MPS ✅      | Colab T4（MPS 有 bug） |
+| 训练时间    | 几分钟           | ~30 分钟              |
+| 最终指标    | PSNR 26.32 dB | mIoU 0.6658         |
+| Loss 类型 | MSE（回归）       | CrossEntropy（分类）    |

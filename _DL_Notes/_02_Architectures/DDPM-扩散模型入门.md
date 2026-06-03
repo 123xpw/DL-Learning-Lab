@@ -348,3 +348,43 @@ flowchart LR
 - **Image-to-Image**：条件扩散做图像复原的直觉基础
 
 下一步：从零实现一个 DDPM（在 MNIST 或 CIFAR-10 上），理解前向加噪、逆向去噪的完整训练循环。
+
+---
+
+## 2025–2026 最新动向
+
+### FLUX.2（Black Forest Labs，2025 年 11 月）
+
+FLUX 系列的重大升级，2026 年初公认的综合最强开源图像生成模型：
+- 生成器 **120 亿参数** + 文本编码器 47 亿参数
+- 支持单次生成中输入最多 **10 张参考图**（角色一致性、品牌视觉）
+- FLUX.1.1 Pro：4.5 秒/张，商业级写实效果
+
+### Stable Diffusion 3.5（Stability AI，2024）
+
+从 U-Net 完全切换到 **MMDiT（Multi-Modal Diffusion Transformer）**：
+- 三重文本编码器：CLIP-G + CLIP-L + T5-XXL 联合理解文字
+- 比 SD 1.x/2.x 的文字理解能力有质的飞跃
+
+### Z-Image / S3-DiT（2025）
+
+S3-DiT（Scalable Single-Stream DiT）：将文本和图像在**单一统一流**中处理，而不是双流架构（如 FLUX 的 MMDiT），速度更快、扩展性更强。
+
+### 稀疏注意力与 4K 生成
+
+2025 年 DiT 系列的主要工程优化方向：
+- **稀疏注意力**：Token 数量随分辨率平方增长，4K 图像的注意力计算量极大——稀疏化后只关注重要位置
+- 已有模型支持 4K 超高清图像直接生成
+
+### 整体趋势（2026）
+
+```mermaid
+flowchart LR
+    SD["Stable Diffusion<br/>U-Net<br/>2022"] --> SD3["SD 3.5<br/>MMDiT<br/>2024"]
+    DiT["DiT<br/>2022"] --> FLUX["FLUX / FLUX.2<br/>Rectified Flow<br/>2024-2025"]
+    SD3 --> S3["S3-DiT<br/>单流架构<br/>2025"]
+    FLUX --> S3
+    S3 --> Future["4K生成<br/>视频生成<br/>多模态统一<br/>2026+"]
+```
+
+**U-Net 时代已经结束**——2026 年所有主流图像生成模型都基于 Transformer（DiT / MMDiT / S3-DiT），U-Net 退场。

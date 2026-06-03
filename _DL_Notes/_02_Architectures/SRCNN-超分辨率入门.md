@@ -191,4 +191,18 @@ SRCNN 和 ESRGAN 都假设退化是"简单的 Bicubic 下采样"。但真实世�
 
 Real-ESRGAN 用**随机混合退化管线**合成训练数据，让模型学会处理真实世界的复杂退化。
 
+### 2025–2026 最新动向
+
+**三条技术路线并行演进：Transformer、Diffusion、Mamba**
+
+| 年份 | 模型 | 核心贡献 |
+|------|------|---------|
+| 2025 | DiT-SR（AAAI 2025）| 将 DiT（Diffusion Transformer）引入 SR，超越此前所有从头训练的扩散 SR 方法 |
+| 2025 | ODTSR | 单步扩散 Transformer，同时兼顾保真度与可控性，支持文字提示控制增强效果 |
+| 2025 | CATformer | Contrastive Adversarial Transformer，结合 GAN 对抗训练 + Transformer，填补三条路线之间的性能差距 |
+| 2025 | BiMaCoSR | 二值化单步扩散模型，极度压缩推理成本 |
+
+**新兴架构：Mamba**
+Mamba（State Space Model）开始进入 SR 领域，与 Transformer 相比具有线性复杂度，对超高分辨率图像（4K+）更友好。
+
 → 下一站：[[DDPM-扩散模型入门]]（扩散先验如何用于超分辨率）

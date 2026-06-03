@@ -185,3 +185,21 @@ flowchart LR
 > [!NOTE] YOLO 系列的意义
 > YOLO 在学术 SOTA 上已不是第一，但工程部署价值极高——ONNX 导出、TensorRT 加速、手机端推理，YOLO 生态最完善。
 > 学术前沿已向"开放词汇+基础模型"方向转移。
+
+### 2025–2026 最新动向
+
+| 年份 | 模型 | 核心贡献 |
+|------|------|---------|
+| NeurIPS 2025 | YOLOv12 | 首个注意力为核心的 YOLO，推理速度首次匹配 CNN 前代；2025 年 2 月发布 |
+| 2026 年 1 月 | YOLO26 | 专为边缘/低功耗设备设计，全端到端无 NMS，Ultralytics 官方推荐新项目起点 |
+| 2025 | RF-DETR | COCO 54.7 mAP @ 4.5ms（T4），结合 DETR 精度和实时推理速度 |
+
+**YOLO26 的变化**：完全去掉 NMS 后处理，训练和部署流程进一步简化；针对边缘芯片（NPU/DSP）优化，是目前端侧部署的首选方向。
+
+**当前格局（2026）**：
+
+```
+学术精度第一：RF-DETR / RT-DETR 系列
+工程部署首选：YOLOv11 / YOLO26（Ultralytics 生态）
+开放词汇检测：YOLO-World / Grounding DINO
+```
