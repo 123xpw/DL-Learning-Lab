@@ -1,0 +1,9 @@
+train: /Users/quokka/Academic/datasets/raw/futbol-players-v9-yolov11/train/images
+val: /Users/quokka/Academic/datasets/raw/futbol-players-v9-yolov11/valid/images
+test: /Users/quokka/Academic/datasets/raw/futbol-players-v9-yolov11/test/images
+
+nc: 3
+names: ['players', 'referee', 'ball']
+
+# Source: Roboflow - futbol-players v9 (Public Domain)
+# https://universe.roboflow.com/ilyes-talbi-ptwsp/futbol-players/dataset/9

@@ -1,3 +1,33 @@
+# Obsidian local state
 .obsidian/workspace.json
 .obsidian/workspace-mobile.json
 .trash/
+
+# Claude Code (sensitive — must not be public)
+.claude/
+CLAUDE.md
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+.DS_Store
+.idea/
+
+# Model weights (too large for git)
+*.pth
+*.pt
+*.ckpt
+*.safetensors
+
+# Datasets (too large for git)
+data/
+*.tar
+*.zip
+
+# Training outputs
+*.png
+*.jpg
+*.jpeg
