@@ -167,6 +167,8 @@ loss = mean((AvgPool(gray) - 0.6)²)
 
 Zero-DCE 的解法：不定义"正确答案"，而是定义"好图像应满足的性质"，用这些性质作为训练信号。这是无监督图像复原的一种范式。
 
+代码路径：[`projects/zero-dce/`](../../projects/zero-dce/)
+
 → 实验结果与诊断见 [[zerodce-exp1-结果]]
 
 ---

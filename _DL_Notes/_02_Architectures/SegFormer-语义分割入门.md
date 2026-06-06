@@ -335,12 +335,45 @@ SAM2 将 SAM 从静态图像扩展到视频：
 
 ---
 
-## 下一步：实验计划
+## 实验记录
 
-→ 见 [[seg-exp1-计划]] （待创建）
+代码路径：
+- 微调版：[`projects/segformer-voc/`](../../projects/segformer-voc/)
+- 从头复现版：[`projects/segformer/`](../../projects/segformer/)
 
-实验目标：
-1. 跑通完整的 SegFormer + VOC2012 训练循环
-2. 理解分割数据集的 DataLoader 写法（自定义 Dataset 类）
-3. 实现 mIoU 计算
-4. 对比 B0 微调 vs 从头训练的效果差异
+### Exp0：微调预训练 SegFormer-B0（本地 MPS）
+
+**配置**：HuggingFace `nvidia/mit-b0` 预训练权重，只训练分割头，VOC2012 train/val
+
+| 指标 | 结果 |
+|------|------|
+| 最终 mIoU | **0.6658** |
+| 训练设备 | Apple MPS |
+| 数据集 | VOC2012（1464 train / 1449 val）|
+
+> [!NOTE] 为什么微调效果这么好
+> 预训练权重已经在 ADE20K 上学会了丰富的视觉特征，只需要"替换分类头"让它适应 VOC2012 的 21 个类别。这是迁移学习的典型场景。
+
+### Exp1：从零复现 MiT-B0（Colab A100）
+
+手写 MiT-B0 编码器（不使用 HuggingFace），从随机初始化开始训练。
+
+**配置**：
+- 手写 MiT-B0（4 stage，Efficient Self-Attention，重叠 Patch Embedding）
+- All-MLP 解码器
+- VOC2012，batch_size=8，lr=6e-5，AdamW
+
+| Epoch | Loss | mIoU |
+|-------|------|------|
+| 1 | 2.64 | — |
+| 10 | 1.54 | — |
+| 20 | 1.21 | — |
+| 38 | 0.99 | 0.1367 |
+| 40（最终）| ~0.99 | **0.1367** |
+
+**分析**：
+- 从头训练 40 个 epoch 只达到 mIoU=0.1367，远低于微调版（0.6658）
+- 差距原因：预训练学到的特征需要大量数据和更多 epoch 才能从头习得
+- Loss 仍在下降，理论上继续训练会继续提升——但从头训练需要数百个 epoch 才能逼近微调效果
+
+**关键结论**：迁移学习的价值非常显著——同样的 B0 架构，有预训练权重的微调版比从零训练高出 0.53 mIoU（约 5 倍差距）。

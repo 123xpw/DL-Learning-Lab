@@ -273,6 +273,16 @@ Rain100L/H 都是合成数据。2025 年研究更重视真实雨图（如 SPA-Da
 
 ---
 
+## 实验结果
+
+代码路径：[`projects/deraining/`](../../projects/deraining/)
+
+| 实验 | 配置 | 最佳 PSNR | PSNR delta |
+|------|------|----------|-----------|
+| Exp1 | SimpleMPRNet, VOC2012, 2-stage | 30.60 dB | **+10.67 dB** |
+
+---
+
 ## 四个图像复原课题对比
 
 | | 超分（SRCNN）| 去雾（AOD-Net）| 低光照（Zero-DCE）| 去雨（MPRNet）|

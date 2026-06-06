@@ -347,7 +347,41 @@ flowchart LR
 - **Attention**：DDPM 的 Bottleneck 自注意力、Cross-Attention 文字条件
 - **Image-to-Image**：条件扩散做图像复原的直觉基础
 
-下一步：从零实现一个 DDPM（在 MNIST 或 CIFAR-10 上），理解前向加噪、逆向去噪的完整训练循环。
+代码路径：[`projects/ddpm/`](../../projects/ddpm/)
+
+### 从零手写 DDPM（MNIST + CFG）
+
+#### 架构（v2）：335,009 参数
+
+```
+UNet
+├── SinusoidalEmbedding(128) → time_mlp(128→256→128)
+├── Embedding(11, 128)         # 类别嵌入，0-9 + 10（无条件占位符）
+├── Encoder: ResBlock + MaxPool ×2
+├── Bottleneck: ResBlock + SelfAttention（7×7 全局注意力）
+└── Decoder: Upsample + ResBlock ×2（skip connection）
+```
+
+关键设计：
+- `SelfAttention`：对 7×7 bottleneck 做多头自注意力，让网络看到全局结构
+- 类别条件注入：`t_emb = t_emb + class_emb(label)` → 类别和时间步共享同一向量空间
+- CFG 训练：20% 概率把 label 替换为 10（无条件），让模型同时学有条件和无条件生成
+
+#### 实验结果（Exp1）
+
+**配置**：T=1000，batch_size=64，epochs=20，lr=2e-4，Apple MPS
+
+| Epoch | Loss |
+|-------|------|
+| 1 | 0.069 |
+| 5 | 0.040 |
+| 10 | 0.029 |
+| 20 | **0.024** |
+
+采样时 CFG_SCALE=3.0，生成数字 0-9 各 16 张，全部正确。
+
+> [!NOTE] 为什么 MPS 能跑 DDPM 却跑不了 SegFormer
+> SegFormer 用 HuggingFace Transformers，某些 BN/LayerNorm 算子在 MPS 上有 bug；手写 DDPM 只用 Conv2d + GroupNorm + Linear，全部 MPS 兼容。
 
 ---
 

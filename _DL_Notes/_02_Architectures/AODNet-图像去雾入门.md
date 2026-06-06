@@ -229,6 +229,8 @@ criterion = nn.MSELoss()          # 预测清晰图 vs 真实清晰图
 | 参数量 | 9.4M | 3.7M | 20K | **1,761** |
 | 物理模型 | 无 | 无 | 无 | **有** |
 
+代码路径：[`projects/aodnet/`](../../projects/aodnet/)
+
 → 实验日志见 [[aodnet-exp1-诊断与exp2计划]]
 
 ---

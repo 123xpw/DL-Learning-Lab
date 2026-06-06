@@ -132,6 +132,8 @@ PSNR 和 MSE 之间是单调关系——MSE 越小，PSNR 越高。训练时用 
 
 ## 实验结果
 
+代码路径：[`projects/srcnn/`](../../projects/srcnn/)
+
 → 见 [[srcnn-exp1-结果]]
 
 ---
