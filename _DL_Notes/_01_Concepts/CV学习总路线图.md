@@ -82,7 +82,7 @@ flowchart LR
   - 注意力机制 Attention（SegFormer 会用到）
   - 图像到图像的映射思路（阶段四会用到）
   - 概率/噪声调度（新知识）
-- **笔记**：[[DDPM-扩散模型入门]] ✅（概念笔记完成）
+- **笔记**：[[DDPM-扩散模型入门]] ✅ · [[StableDiffusion-VAE与CrossAttention]] 🔄（VAE / Cross-Attention / Multi-Head Attention）· [[Stable-Diffusion-LoRA入门]] ✅
 
 ```mermaid
 flowchart LR

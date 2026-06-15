@@ -1,6 +1,7 @@
 ---
-tags: [stable-diffusion, VAE, cross-attention, CLIP, latent-diffusion, LDM]
+tags: [stable-diffusion, VAE, cross-attention, multi-head-attention, CLIP, latent-diffusion, LDM]
 created: 2026-06-11
+updated: 2026-06-13
 ---
 
 # Stable Diffusion：VAE 与 Cross-Attention
@@ -136,6 +137,134 @@ softmax 极度尖锐时：
 - 梯度趋近于 0，W_Q / W_K 无法更新，训练失败
 
 **解决方案：** 除以 √d，把点积压回量级 ≈ 1，softmax 保持软分布，梯度正常流动。
+
+---
+
+## Multi-Head Cross-Attention
+
+单头注意力只能学到一种"关注模式"。Multi-Head 把注意力空间拆成 N 份，每个头独立学习不同模式：
+
+```
+头 1：关注语义（"猫"→毛茸茸纹理区域）
+头 2：关注位置（"左边的猫"→左侧空间）
+头 3：关注风格（"水彩画"→整体色调区域）
+...共 8 个头，并行不干扰
+```
+
+### 核心关系
+
+```
+d_model = heads × dim_head
+  512   =   8   ×    64      ← SD1.5 实际配置
+```
+
+### 拆头 / 合并头的 Tensor 操作
+
+```
+拆头：
+  [B, seq, 512]
+    → reshape → [B, seq, 8, 64]
+    → permute → [B, 8, seq, 64]   ← 8 个头并行
+
+合并头（完全对称）：
+  [B, 8, seq, 64]
+    → permute → [B, seq, 8, 64]
+    → reshape → [B, seq, 512]     ← 8 消失，合并进 512
+```
+
+### 完整代码（含 shape 注释）
+
+```python
+class CrossAttention(nn.Module):
+    def __init__(self, dim, context_dim, heads=8, dim_head=64):
+        super().__init__()
+        inner_dim = heads * dim_head          # 512
+        self.heads = heads
+        self.dim_head = dim_head
+        self.scale = dim_head ** -0.5         # 1/√64
+
+        self.to_q = nn.Linear(dim, inner_dim, bias=False)
+        self.to_k = nn.Linear(context_dim, inner_dim, bias=False)
+        self.to_v = nn.Linear(context_dim, inner_dim, bias=False)
+        self.to_out = nn.Linear(inner_dim, dim)
+
+    def forward(self, x, context):
+        # x: 图像特征 [B, seq_img, dim]
+        # context: CLIP 文字向量 [B, seq_txt, 768]
+        B, N, _ = x.shape
+        H = self.heads
+
+        Q = self.to_q(x)        # [B, seq_img, 512]  ← 投影到同一空间
+        K = self.to_k(context)  # [B, seq_txt, 512]
+        V = self.to_v(context)  # [B, seq_txt, 512]
+
+        # 拆头
+        Q = Q.reshape(B, N, H, self.dim_head).permute(0, 2, 1, 3)   # [B, 8, seq_img, 64]
+        K = K.reshape(B, -1, H, self.dim_head).permute(0, 2, 1, 3)  # [B, 8, seq_txt, 64]
+        V = V.reshape(B, -1, H, self.dim_head).permute(0, 2, 1, 3)  # [B, 8, seq_txt, 64]
+
+        # 注意力计算（8 个头同时并行）
+        attn = (Q @ K.transpose(-1, -2)) * self.scale  # [B, 8, seq_img, seq_txt]
+        attn = attn.softmax(dim=-1)                    # 每行变成概率分布
+        out  = attn @ V                                 # [B, 8, seq_img, 64] ← 文字内容
+
+        # 合并头
+        out = out.permute(0, 2, 1, 3).reshape(B, N, -1)  # [B, seq_img, 512]
+        return self.to_out(out)                            # [B, seq_img, dim]
+```
+
+### 三个固定参数的来源
+
+| 参数 | 值 | 谁定的 | 含义 |
+|------|-----|--------|------|
+| `context_dim = 768` | CLIP ViT-L/14 输出维度 | OpenAI（CLIP 作者） | 每个文字 token 的语义向量大小 |
+| `dim = 320/640/1280` | UNet 各层 channel 数 | Stability AI | 图像特征维度，不同深度不同 |
+| `heads = 8` | 注意力头数 | Stability AI（可调超参） | 并行关注模式数量 |
+
+> **CLIP vs GPT 的关键区别：**  
+> GPT 预测下一个 token（生成文字）；CLIP 把整句话编码成语义向量（理解文字）。  
+> SD 用的是 CLIP 的理解能力，不是 GPT 的生成能力。
+
+---
+
+## 关键超参数（SD 1.5）
+
+来源：Rombach et al., "High-Resolution Image Synthesis with Latent Diffusion Models", CVPR 2022
+
+| 参数 | 值 | 调参方向 |
+|------|-----|---------|
+| attention heads | 8 | 更多头 → 更丰富的关注模式，但显存增加 |
+| dim_head | 64 | 与 heads 乘积决定 inner_dim |
+| context_dim | 768 | 由 CLIP 模型固定，不可改 |
+| Cross-Attn 所在分辨率 | 64×64, 32×32, 16×16, 8×8 | 多分辨率嵌入让文字在不同尺度生效 |
+| VAE 压缩比 | 8× (512→64) | 固定 |
+| latent channels | 4 | 固定 |
+
+---
+
+## 研究前沿与最新进展
+
+```mermaid
+timeline
+    title Cross-Attention 在 SD 中的发展
+    2017 : Attention Is All You Need<br/>Vaswani et al.<br/>Multi-Head Attention 提出
+    2022 : LDM / Stable Diffusion<br/>Rombach et al., CVPR<br/>Cross-Attention 用于文字条件生成
+    2023 : Prompt-to-Prompt<br/>Hertz et al., ICLR<br/>编辑 Cross-Attention Map 实现图像编辑
+    2023 : Attend-and-Excite<br/>Chefer et al., ACM TOG<br/>优化 Attn Map 解决多对象生成失败问题
+    2024 : SDXL + DiT<br/>更大模型，Cross-Attention 扩展到 Transformer 架构
+    2025 : FLUX / SD3<br/>MM-DiT 双流 Transformer，Self/Cross-Attention 统一
+```
+
+### 代表性后续工作
+
+**Prompt-to-Prompt（ICLR 2023）**  
+发现图像的空间布局由 Cross-Attention Map 决定。通过替换或混合不同 prompt 的注意力图，可以在保持结构不变的前提下修改语义（如"狗"→"猫"，姿势不变）。
+
+**Attend-and-Excite（ACM TOG 2023）**  
+解决 SD 多对象生成失败问题（如"红色猫和蓝色狗"可能只生成一种）。在推理中监控 Cross-Attention Map，对关注度不足的 token 施加 loss 强制激活。
+
+**MM-DiT（FLUX / SD3, 2024-2025）**  
+用 Diffusion Transformer 替换 UNet，文字和图像 token 在同一序列里做 Full Attention，不再区分 Self/Cross，语义对齐更精准。
 
 ---
 
